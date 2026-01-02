@@ -85,6 +85,7 @@ class OfflineChatbot:
         
         # Keep only recent history
         if len(self.conversation_history) > MAX_HISTORY * 2:
+            # Keep MAX_HISTORY user-assistant pairs (2 messages per pair)
             self.conversation_history = self.conversation_history[-(MAX_HISTORY * 2):]
         
         # Format conversation for Gemma
