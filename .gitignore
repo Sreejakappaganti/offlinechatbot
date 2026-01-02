@@ -1,0 +1,68 @@
+# OfflineAiBot .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+envi/
+venv/
+ENV/
+env/
+
+# Environment Variables
+.env
+
+# Data (documents and vector store)
+data/documents/*
+data/vector_store/*
+!data/documents/.gitkeep
+!data/vector_store/.gitkeep
+
+# Models cache
+models/*
+!models/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Flask
+instance/
+.webassets-cache
+
+# Test files
+test_*.txt
+temp_*
