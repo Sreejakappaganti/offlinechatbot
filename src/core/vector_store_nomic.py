@@ -9,7 +9,7 @@ import numpy as np
 import faiss
 import requests
 
-from . import config
+import config
 
 
 class NomicVectorStore:

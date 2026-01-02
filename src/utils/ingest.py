@@ -5,12 +5,9 @@ Run this script to index documents from the data/documents folder
 import sys
 from pathlib import Path
 
-# Add parent directory to path to import from src
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from src.core import config
-from src.core.document_processor import DocumentProcessor
-from src.core.vector_store_nomic import NomicVectorStore as VectorStore
+import config
+from document_processor import DocumentProcessor
+from vector_store_nomic import NomicVectorStore as VectorStore
 
 
 def main():

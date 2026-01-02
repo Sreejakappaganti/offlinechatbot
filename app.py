@@ -9,9 +9,9 @@ from typing import Dict, List
 import requests
 from dotenv import load_dotenv
 
-from src.core import config
-from src.core.vector_store_nomic import NomicVectorStore as VectorStore
-from src.core.document_processor import DocumentProcessor
+import config
+from vector_store_nomic import NomicVectorStore as VectorStore
+from document_processor import DocumentProcessor
 
 # Load environment variables
 load_dotenv()

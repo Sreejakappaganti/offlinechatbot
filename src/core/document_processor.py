@@ -28,7 +28,7 @@ import pdfplumber
 from docx import Document
 from pptx import Presentation
 
-from . import config
+import config
 
 
 class DocumentProcessor:
