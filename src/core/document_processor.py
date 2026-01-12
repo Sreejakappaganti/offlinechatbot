@@ -28,7 +28,7 @@ import pdfplumber
 from docx import Document
 from pptx import Presentation
 
-import config
+from . import config
 
 
 class DocumentProcessor:
@@ -126,7 +126,8 @@ class DocumentProcessor:
                 print(f"PyPDF2 failed: {e}")
         
         # If still not much text, it's probably scanned - use OCR
-        if len(text.strip()) < 50:
+        # Increased threshold to 500 to catch scanned docs with headers
+        if len(text.strip()) < 500:
             print(f"Little/no text extracted ({len(text.strip())} chars). Attempting OCR...")
             if self.tesseract_available and self.pdf2image_available:
                 try:
@@ -300,21 +301,30 @@ class DocumentProcessor:
         return text
     
     def _clean_text(self, text: str) -> str:
-        """Clean extracted text"""
-        # Remove excessive whitespace
-        text = re.sub(r'\s+', ' ', text)
+        """Clean extracted text while preserving important formatting"""
+        # Normalize line breaks
+        text = text.replace('\r\n', '\n').replace('\r', '\n')
         
-        # Remove special characters but keep punctuation
-        text = re.sub(r'[^\w\s.,!?;:\-\(\)\'\"]+', '', text)
+        # Remove excessive whitespace but preserve single spaces
+        text = re.sub(r'[ \t]+', ' ', text)
+        
+        # Remove excessive newlines (more than 2)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        # Clean up common OCR artifacts
+        text = re.sub(r'[^\w\s.,!?;:\-\(\)\'\"\n/@#%&+=]+', '', text)
         
         # Remove multiple consecutive punctuation
-        text = re.sub(r'([.,!?;:])\1+', r'\1', text)
+        text = re.sub(r'([.,!?;:]){2,}', r'\1', text)
+        
+        # Remove spaces before punctuation
+        text = re.sub(r'\s+([.,!?;:])', r'\1', text)
         
         return text.strip()
     
     def _chunk_text(self, text: str, max_tokens: int = None) -> List[str]:
         """
-        Split text into chunks of maximum token size
+        Split text into chunks with smart sentence boundary detection
         
         Args:
             text: Input text
@@ -330,26 +340,42 @@ class DocumentProcessor:
         max_chars = max_tokens * 4
         overlap_chars = config.CHUNK_OVERLAP * 4
         
+        if len(text) <= max_chars:
+            return [text]
+        
         chunks = []
-        sentences = re.split(r'(?<=[.!?])\s+', text)
+        
+        # Better sentence splitting with common abbreviations handled
+        # Split on sentence boundaries but preserve context
+        sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
         
         current_chunk = ""
+        current_sentences = []
         
         for sentence in sentences:
-            # If adding this sentence exceeds max, save current chunk
-            if len(current_chunk) + len(sentence) > max_chars and current_chunk:
+            # Check if adding this sentence would exceed limit
+            test_chunk = current_chunk + " " + sentence if current_chunk else sentence
+            
+            if len(test_chunk) > max_chars and current_chunk:
+                # Save current chunk
                 chunks.append(current_chunk.strip())
                 
-                # Start new chunk with overlap
-                words = current_chunk.split()
-                overlap_words = words[-int(overlap_chars/5):] if len(words) > 10 else []
-                current_chunk = " ".join(overlap_words) + " " + sentence
+                # Create overlap: take last 20% of sentences from current chunk
+                overlap_count = max(1, len(current_sentences) // 5)
+                overlap_sentences = current_sentences[-overlap_count:]
+                current_chunk = " ".join(overlap_sentences) + " " + sentence
+                current_sentences = overlap_sentences + [sentence]
             else:
-                current_chunk += " " + sentence
+                current_chunk = test_chunk
+                current_sentences.append(sentence)
         
         # Add the last chunk
         if current_chunk.strip():
             chunks.append(current_chunk.strip())
+        
+        # If no chunks were created (text shorter than max), return original
+        if not chunks:
+            chunks = [text]
         
         return chunks
     

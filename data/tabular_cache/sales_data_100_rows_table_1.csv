@@ -1,0 +1,38 @@
+Order_ID,Order_Date,Product,Category,Quantity,Unit_Price,Total_Sales,Region,Salesperson
+36,2025-01-18,Mobile Phone,Electronics,7,25000,175000,North,Priya
+37,2025-02-27,Mobile Phone,Electronics,3,25000,75000,South,Amit
+38,2025-04-14,Water Bottle,Accessories,5,500,2500,East,Sreeja
+39,2025-01-18,Headphones,Electronics,7,2000,14000,East,Kiran
+40,2025-01-30,Office Chair,Furniture,8,7000,56000,South,Ravi
+41,2025-03-15,Smart Watch,Electronics,2,5000,10000,South,Priya
+42,2025-03-05,T-Shirt,Fashion,2,900,1800,North,Priya
+43,2025-02-04,Notebook,Stationery,1,120,120,East,Priya
+44,2025-01-27,Headphones,Electronics,3,2000,6000,North,Kiran
+45,2025-02-10,Headphones,Electronics,6,2000,12000,South,Sreeja
+46,2025-02-05,T-Shirt,Fashion,10,900,9000,East,Sreeja
+47,2025-01-05,Smart Watch,Electronics,2,5000,10000,West,Ravi
+48,2025-03-29,Pen Set,Stationery,1,250,250,West,Kiran
+49,2025-01-17,Smart Watch,Electronics,1,5000,5000,North,Priya
+50,2025-03-05,Notebook,Stationery,7,120,840,West,Kiran
+51,2025-03-12,Water Bottle,Accessories,10,500,5000,South,Kiran
+52,2025-01-22,Notebook,Stationery,8,120,960,West,Ravi
+53,2025-03-13,Headphones,Electronics,6,2000,12000,North,Ravi
+54,2025-04-26,Pen Set,Stationery,3,250,750,North,Priya
+55,2025-03-10,Mobile Phone,Electronics,7,25000,175000,West,Neha
+56,2025-03-30,Pen Set,Stationery,7,250,1750,South,Amit
+57,2025-03-18,Water Bottle,Accessories,5,500,2500,North,Neha
+58,2025-02-07,Electric Kettle,Home Appliances,10,1800,18000,West,Priya
+59,2025-04-09,Desk,Furniture,2,12000,24000,East,Sreeja
+60,2025-01-06,Mobile Phone,Electronics,1,25000,25000,North,Ravi
+61,2025-03-14,Laptop,Electronics,9,55000,495000,West,Sreeja
+62,2025-02-06,Notebook,Stationery,6,120,720,South,Ravi
+63,2025-04-18,Notebook,Stationery,8,120,960,East,Neha
+64,2025-03-03,Desk,Furniture,4,12000,48000,West,Kiran
+65,2025-01-23,Smart Watch,Electronics,10,5000,50000,South,Priya
+66,2025-01-28,Laptop,Electronics,7,55000,385000,West,Kiran
+67,2025-04-23,Mixer Grinder,Home Appliances,6,6500,39000,North,Sreeja
+68,2025-01-15,Backpack,Accessories,9,1800,16200,West,Amit
+69,2025-03-25,Laptop,Electronics,2,55000,110000,West,Ravi
+70,2025-01-05,Office Chair,Furniture,2,7000,14000,North,Amit
+71,2025-02-10,Laptop,Electronics,8,55000,440000,South,Ravi
+72,2025-03-23,Headphones,Electronics,2,2000,4000,South,Amit

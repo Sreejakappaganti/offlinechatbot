@@ -1,0 +1,36 @@
+Order_ID,Order_Date,Product,Category,Quantity,Unit_Price,Total_Sales,Region,Salesperson
+1,2025-04-29,Mixer Grinder,Home Appliances,5,6500,32500,East,Neha
+2,2025-01-25,T-Shirt,Fashion,4,900,3600,East,Priya
+3,2025-03-14,Mixer Grinder,Home Appliances,3,6500,19500,West,Kiran
+4,2025-03-06,Desk,Furniture,9,12000,108000,West,Kiran
+5,2025-03-31,Mixer Grinder,Home Appliances,8,6500,52000,North,Priya
+6,2025-01-29,Laptop,Electronics,3,55000,165000,East,Neha
+7,2025-04-23,Pen Set,Stationery,8,250,2000,East,Amit
+8,2025-03-25,T-Shirt,Fashion,6,900,5400,North,Amit
+9,2025-03-29,Office Chair,Furniture,1,7000,7000,South,Ravi
+10,2025-04-08,T-Shirt,Fashion,3,900,2700,South,Sreeja
+11,2025-04-01,Shoes,Fashion,1,3000,3000,North,Amit
+12,2025-02-26,Backpack,Accessories,9,1800,16200,South,Neha
+13,2025-02-19,Jacket,Fashion,6,4500,27000,East,Kiran
+14,2025-04-03,Water Bottle,Accessories,6,500,3000,North,Amit
+15,2025-01-15,Jacket,Fashion,9,4500,40500,West,Ravi
+16,2025-03-24,Smart Watch,Electronics,2,5000,10000,East,Priya
+17,2025-04-17,Electric Kettle,Home Appliances,4,1800,7200,West,Kiran
+18,2025-03-14,Headphones,Electronics,9,2000,18000,North,Sreeja
+19,2025-01-18,Shoes,Fashion,10,3000,30000,East,Sreeja
+20,2025-03-19,Headphones,Electronics,4,2000,8000,North,Amit
+21,2025-03-19,Shoes,Fashion,1,3000,3000,South,Sreeja
+22,2025-02-08,Notebook,Stationery,9,120,1080,East,Kiran
+23,2025-01-12,Mobile Phone,Electronics,6,25000,150000,East,Amit
+24,2025-02-28,Notebook,Stationery,10,120,1200,South,Kiran
+25,2025-02-10,Notebook,Stationery,1,120,120,South,Ravi
+26,2025-01-11,T-Shirt,Fashion,7,900,6300,East,Neha
+27,2025-03-07,Water Bottle,Accessories,10,500,5000,West,Sreeja
+28,2025-04-27,Pen Set,Stationery,4,250,1000,North,Priya
+29,2025-03-27,Notebook,Stationery,9,120,1080,South,Amit
+30,2025-03-10,Headphones,Electronics,10,2000,20000,South,Kiran
+31,2025-04-29,Backpack,Accessories,2,1800,3600,North,Neha
+32,2025-01-31,Headphones,Electronics,10,2000,20000,North,Priya
+33,2025-04-27,Desk,Furniture,2,12000,24000,South,Priya
+34,2025-03-15,Desk,Furniture,10,12000,120000,South,Neha
+35,2025-04-05,Pen Set,Stationery,5,250,1250,East,Neha

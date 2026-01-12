@@ -9,9 +9,10 @@ from typing import Dict, List
 import requests
 from dotenv import load_dotenv
 
-import config
-from vector_store_nomic import NomicVectorStore as VectorStore
-from document_processor import DocumentProcessor
+from src.core import config
+from src.core.vector_store_nomic import NomicVectorStore as VectorStore
+from src.core.document_processor import DocumentProcessor
+from src.core.hybrid_chatbot import HybridChatbot  # NEW: Import hybrid chatbot
 
 # Load environment variables
 load_dotenv()
@@ -70,14 +71,15 @@ class OllamaClient:
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
-                "top_k": 50,
+                "top_k": 40,
                 "top_p": 0.9,
                 "repeat_penalty": 1.1,
+                "num_ctx": config.LLM_CONTEXT_WINDOW
             }
         }
         
         try:
-            response = requests.post(url, json=payload, timeout=120)
+            response = requests.post(url, json=payload, timeout=config.LLM_TIMEOUT_SECONDS)
             response.raise_for_status()
             
             result = response.json()
@@ -86,7 +88,7 @@ class OllamaClient:
         except requests.exceptions.ConnectionError:
             return "Error: Cannot connect to Ollama. Make sure Ollama is running (ollama serve)."
         except requests.exceptions.Timeout:
-            return "Error: Request timed out. The model might be taking too long to respond."
+            return "Error: Request timed out. The document may be too complex. Try reducing RETRIEVAL_TOP_K (currently set to {}) in config.py or use a smaller model.".format(config.RETRIEVAL_TOP_K)
         except Exception as e:
             return f"Error generating response: {str(e)}"
     
@@ -114,10 +116,13 @@ class OllamaClient:
 # Initialize Ollama client
 ollama_client = OllamaClient()
 
+# Initialize Hybrid Chatbot - NEW
+hybrid_chatbot = HybridChatbot(vector_store=vector_store, llm_client=ollama_client)
+
 
 def perform_rag(query: str) -> Dict:
     """
-    Perform RAG: Retrieve relevant documents and generate answer
+    Enhanced RAG with query expansion and deduplication
     
     Args:
         query: User query
@@ -125,7 +130,7 @@ def perform_rag(query: str) -> Dict:
     Returns:
         Dictionary with answer and metadata
     """
-    # Step 1: Retrieve relevant documents
+    # Step 1: Check if documents exist
     if vector_store.index.ntotal == 0:
         return {
             'answer': "No documents have been indexed yet. Please add documents first.",
@@ -133,44 +138,55 @@ def perform_rag(query: str) -> Dict:
             'error': 'no_documents'
         }
     
-    retrieved_docs = vector_store.search(query, k=config.RETRIEVAL_TOP_K)
+    # Step 2: Expand query for better coverage
+    queries = config.expand_query(query)
+    print(f"\n[RAG Debug] Original query: {query}")
+    print(f"[RAG Debug] Expanded queries: {queries}")
     
-    if not retrieved_docs:
+    # Step 3: Search with multiple query variations
+    all_results = []
+    top_k = config.RETRIEVAL_TOP_K
+    
+    for q in queries:
+        results = vector_store.search(q, k=top_k)
+        all_results.extend(results)
+        print(f"[RAG Debug] Query '{q}' retrieved {len(results)} chunks")
+    
+    if not all_results:
         return {
             'answer': "I don't have enough information in the uploaded documents to answer this question. Please upload relevant documents first.",
             'sources': [],
             'error': 'no_results'
         }
     
-    # Step 2: Prepare context from retrieved documents
-    context_parts = []
-    for idx, doc in enumerate(retrieved_docs, 1):
-        context_parts.append(f"--- Document Excerpt {idx} ---")
-        context_parts.append(f"Source: {doc['source']}")
-        context_parts.append(f"Content: {doc['text']}")
-        context_parts.append("")
+    # Step 4: Remove duplicates and sort by score
+    unique_results = config.remove_duplicates(all_results, threshold=0.90)
+    top_results = sorted(unique_results, key=lambda x: x['score'])[:top_k]  # Lower score is better for L2
     
-    context = "\n".join(context_parts)
+    print(f"[RAG Debug] After deduplication: {len(unique_results)} unique chunks")
+    print(f"[RAG Debug] Top {len(top_results)} chunks selected")
+    
+    # Step 5: Format context with metadata
+    context = config.format_retrieved_context(top_results, include_metadata=True)
     
     # Debug: Log retrieved context
-    print(f"\n[RAG Debug] Query: {query}")
-    print(f"[RAG Debug] Retrieved {len(retrieved_docs)} chunks:")
-    for idx, doc in enumerate(retrieved_docs, 1):
+    print(f"\n[RAG Debug] Final retrieved chunks:")
+    for idx, doc in enumerate(top_results, 1):
         print(f"  {idx}. {doc['source']} (score: {doc['score']:.3f}) - {doc['text'][:100]}...")
     
-    # Step 3: Create prompt with context
+    # Step 6: Create prompt with context
     prompt = config.get_rag_prompt(query, context)
     
-    # Debug: Log the full prompt
-    print(f"\n[RAG Debug] Full prompt being sent to LLM:")
+    # Debug: Log the full prompt (first 500 chars)
+    print(f"\n[RAG Debug] Prompt preview (first 500 chars):")
     print("="*60)
-    print(prompt)
+    print(prompt[:500])
     print("="*60)
     
-    # Step 4: Generate answer using Ollama
+    # Step 7: Generate answer using Ollama
     answer = ollama_client.generate(prompt)
     
-    # Step 5: Prepare response
+    # Step 8: Prepare response
     sources = [
         {
             'source': doc['source'],
@@ -178,13 +194,16 @@ def perform_rag(query: str) -> Dict:
             'score': doc['score'],
             'text': doc['text'][:200] + '...' if len(doc['text']) > 200 else doc['text']
         }
-        for doc in retrieved_docs
+        for doc in top_results
     ]
     
     return {
         'answer': answer,
         'sources': sources,
-        'query': query
+        'query': query,
+        'expanded_queries': queries,
+        'total_retrieved': len(all_results),
+        'unique_retrieved': len(unique_results)
     }
 
 
@@ -214,6 +233,7 @@ def health():
 def chat():
     """
     Chat endpoint for RAG-based question answering
+    Enhanced with hybrid data analysis capabilities
     
     Request JSON:
         {
@@ -224,7 +244,8 @@ def chat():
         {
             "answer": "Generated answer",
             "sources": [...],
-            "query": "Original query"
+            "query": "Original query",
+            "mode": "document_retrieval" or "data_analysis"
         }
     """
     try:
@@ -249,22 +270,40 @@ def chat():
                 'message': f'Please ensure Ollama is running and model "{ollama_client.model}" is installed'
             }), 503
         
-        # Perform RAG
-        result = perform_rag(query)
+        # NEW: Use hybrid chatbot to route query
+        result = hybrid_chatbot.query(query, rag_function=perform_rag)
         
         return jsonify(result)
     
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"[ERROR] Chat endpoint failed:")
+        print(error_trace)
         return jsonify({
             'error': 'Internal server error',
-            'message': str(e)
+            'message': str(e),
+            'traceback': error_trace
         }), 500
 
 
 @app.route('/stats', methods=['GET'])
 def stats():
     """Get vector store statistics"""
-    return jsonify(vector_store.get_stats())
+    stats_data = vector_store.get_stats()
+    
+    # Add table information if available
+    if hybrid_chatbot.has_tables():
+        stats_data['tables'] = {
+            'available': True,
+            'info': hybrid_chatbot.get_table_info()
+        }
+    else:
+        stats_data['tables'] = {
+            'available': False
+        }
+    
+    return jsonify(stats_data)
 
 
 @app.route('/ingest', methods=['POST'])
@@ -290,8 +329,9 @@ def ingest():
             print("[Upload] ⚠ Clearing ALL previous documents and vector store...")
             
             # CLEAR VECTOR STORE - Start fresh with new upload
-            global vector_store
+            global vector_store, hybrid_chatbot
             vector_store = VectorStore()  # Reinitialize empty vector store
+            hybrid_chatbot = HybridChatbot(vector_store=vector_store, llm_client=ollama_client)  # NEW: Reinitialize hybrid chatbot
             
             # Process uploaded files
             for file in files:
@@ -307,9 +347,16 @@ def ingest():
                         print(f"[Upload] Processing {filename}...")
                         chunks = processor.process_document(filepath)
                         
+                        # NEW: Also check for tables in the document
+                        table_info = hybrid_chatbot.load_document(filepath)
+                        
                         if chunks:
                             results[filename] = chunks
                             print(f"[Upload] [OK] Extracted {len(chunks)} chunks from {filename}")
+                            
+                            # Log table info if found
+                            if table_info.get('has_tables'):
+                                print(f"[Upload] [OK] Found {table_info['tables_count']} table(s) in {filename}")
                         else:
                             errors.append(f"{filename}: No text could be extracted")
                             print(f"[Upload] [ERROR] No text extracted from {filename}")

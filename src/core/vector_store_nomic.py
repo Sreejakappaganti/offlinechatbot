@@ -9,7 +9,7 @@ import numpy as np
 import faiss
 import requests
 
-import config
+from . import config
 
 
 class NomicVectorStore:
@@ -57,7 +57,7 @@ class NomicVectorStore:
                     "model": self.model_name,
                     "prompt": text
                 },
-                timeout=30
+                timeout=60
             )
             
             if response.status_code == 200:
@@ -118,18 +118,35 @@ class NomicVectorStore:
         
         print(f"[OK] Added {len(chunks)} chunks. Total vectors: {self.index.ntotal}")
     
+    def _expand_query(self, query: str) -> str:
+        """Expand query for better matching"""
+        query_lower = query.lower()
+        
+        # Expand common queries
+        if 'chapter' in query_lower:
+            return query + " introduction section heading title"
+        elif 'contents' in query_lower or 'table of contents' in query_lower:
+            return query + " index table of contents list chapters sections"
+        elif any(word in query_lower for word in ['summary', 'abstract', 'overview']):
+            return query + " summary abstract overview introduction conclusion"
+        
+        return query
+    
     def search(self, query: str, k: int = None) -> List[Dict]:
-        """Search for relevant chunks"""
+        """Search for relevant chunks with query expansion"""
         if k is None:
             k = self.top_k
         
         if self.index.ntotal == 0:
             return []
         
+        # Expand query for better matching
+        expanded_query = self._expand_query(query)
+        
         k = min(k, self.index.ntotal)
         
-        # Get query embedding
-        query_vector = self._get_embedding(query)
+        # Get query embedding using expanded query
+        query_vector = self._get_embedding(expanded_query)
         query_vector = query_vector.reshape(1, -1)
         
         # Search in FAISS

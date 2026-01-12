@@ -1,0 +1,29 @@
+Order_ID,Order_Date,Product,Category,Quantity,Unit_Price,Total_Sales,Region,Salesperson
+73,2025-01-28,Jacket,Fashion,3,4500,13500,East,Priya
+74,2025-02-24,Water Bottle,Accessories,2,500,1000,East,Neha
+75,2025-03-29,Office Chair,Furniture,5,7000,35000,North,Ravi
+76,2025-02-06,Shoes,Fashion,6,3000,18000,South,Sreeja
+77,2025-04-27,Headphones,Electronics,10,2000,20000,South,Kiran
+78,2025-01-01,Office Chair,Furniture,10,7000,70000,North,Amit
+79,2025-04-07,Mixer Grinder,Home Appliances,1,6500,6500,West,Neha
+80,2025-01-02,Water Bottle,Accessories,9,500,4500,South,Ravi
+81,2025-02-20,Headphones,Electronics,4,2000,8000,South,Amit
+82,2025-03-26,Laptop,Electronics,10,55000,550000,South,Priya
+83,2025-01-13,Smart Watch,Electronics,9,5000,45000,South,Ravi
+84,2025-04-14,Backpack,Accessories,4,1800,7200,South,Amit
+85,2025-01-17,Smart Watch,Electronics,2,5000,10000,South,Sreeja
+86,2025-02-03,Jacket,Fashion,10,4500,45000,East,Neha
+87,2025-02-26,Laptop,Electronics,2,55000,110000,West,Neha
+88,2025-01-14,Jacket,Fashion,5,4500,22500,West,Ravi
+89,2025-04-20,Pen Set,Stationery,8,250,2000,West,Amit
+90,2025-03-03,Water Bottle,Accessories,3,500,1500,West,Neha
+91,2025-01-21,Mixer Grinder,Home Appliances,1,6500,6500,North,Priya
+92,2025-04-30,Laptop,Electronics,10,55000,550000,South,Ravi
+93,2025-02-02,Laptop,Electronics,7,55000,385000,West,Neha
+94,2025-03-08,Mixer Grinder,Home Appliances,1,6500,6500,North,Neha
+95,2025-03-31,Jacket,Fashion,6,4500,27000,South,Kiran
+96,2025-04-19,Notebook,Stationery,4,120,480,West,Kiran
+97,2025-02-23,Mixer Grinder,Home Appliances,10,6500,65000,West,Sreeja
+98,2025-04-17,Laptop,Electronics,5,55000,275000,North,Kiran
+99,2025-03-04,Headphones,Electronics,7,2000,14000,North,Sreeja
+100,2025-02-03,Backpack,Accessories,4,1800,7200,West,Amit
