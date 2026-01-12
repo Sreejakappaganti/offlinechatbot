@@ -142,12 +142,13 @@ class HybridChatbot:
         Returns:
             Dictionary with answer and metadata
         """
-        # Classify query type
-        query_type = self.query_router.classify_query(user_query)
+        # Classify query type - pass whether we have tabular data
+        has_tabular_data = self.current_dataframe is not None
+        query_type = self.query_router.classify_query(user_query, has_tabular_data)
         
-        print(f"🎯 Query Type: {query_type}")
+        print(f"🎯 Query Type: {query_type} (Has tabular data: {has_tabular_data})")
         
-        if query_type == 'data_analysis' and self.current_dataframe is not None:
+        if query_type == 'data_analysis' and has_tabular_data:
             return self._handle_data_analysis(user_query)
         else:
             # Fallback to document retrieval

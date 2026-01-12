@@ -420,9 +420,8 @@ if __name__ == '__main__':
         print(f"  1. Start Ollama: ollama serve")
         print(f"  2. Pull model: ollama pull {ollama_client.model}")
     
-    print("\n" + "="*60)
+
     print(f"Starting Flask server on {config.FLASK_HOST}:{config.FLASK_PORT}")
-    print("="*60 + "\n")
     
     # Run Flask app
     app.run(

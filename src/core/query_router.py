@@ -11,22 +11,16 @@ class QueryRouter:
     """Routes queries to RAG or Data Analysis based on intent"""
     
     @staticmethod
-    def classify_query(query: str) -> str:
+    def classify_query(query: str, has_tabular_data: bool = False) -> str:
         """
         Classify query as 'data_analysis' or 'document_retrieval'
+        
+        Args:
+            query: User's query string
+            has_tabular_data: Whether tabular data is currently loaded
         """
-        query_lower = query.lower()
-        
-        # Exclude summary/summarize queries (they contain 'sum' but aren't calculations)
-        if any(word in query_lower for word in ['summarize', 'summary']):
-            return 'document_retrieval'
-        
-        # Check for calculation keywords
-        for keyword in CALCULATION_KEYWORDS:
-            if keyword in query_lower:
-                return 'data_analysis'
-        
-        return 'document_retrieval'
+        from .config import classify_query_type
+        return classify_query_type(query, has_tabular_data)
     
     @staticmethod
     def should_use_data_analysis(query: str, has_tabular_data: bool) -> bool:
@@ -36,4 +30,4 @@ class QueryRouter:
         if not has_tabular_data:
             return False
         
-        return QueryRouter.classify_query(query) == 'data_analysis'
+        return QueryRouter.classify_query(query, has_tabular_data) == 'data_analysis'

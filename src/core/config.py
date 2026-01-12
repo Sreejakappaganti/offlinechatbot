@@ -39,7 +39,7 @@ FAISS_METADATA_PATH = VECTOR_STORE_DIR / "metadata.pkl"
 FAISS_METADATA_BM25_PATH = VECTOR_STORE_DIR / "bm25_index.pkl"
 
 # Retrieval settings - CRITICAL IMPROVEMENTS
-RETRIEVAL_TOP_K = 8  # Increased from 5 for better coverage
+RETRIEVAL_TOP_K = 3  # Reduced to 3 for faster LLM processing (prevents timeouts)
 RETRIEVAL_SIMILARITY_THRESHOLD = 0.3  # NEW: Filter out low-quality matches
 RETRIEVAL_MAX_CHARS = 8000  # NEW: Prevent context window overflow
 RETRIEVAL_RERANK = True  # Re-rank results for better accuracy
@@ -105,14 +105,24 @@ FLASK_MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB max upload
 # DATA ANALYSIS CONFIGURATION - NEW
 # ============================================================================
 # Keywords to identify calculation/data analysis queries
+# Core mathematical operation keywords - these indicate calculation queries
 CALCULATION_KEYWORDS = [
     'average', 'mean', 'sum', 'total', 'count', 'how many',
     'maximum', 'minimum', 'highest', 'lowest', 'median', 'mode',
-    'calculate', 'compute', 'group by', 'top', 'bottom',
+    'calculate', 'compute', 'group by',
     'percentage', 'ratio', 'most common', 'least common',
-    'which', 'what', 'who', 'most', 'least', 'best', 'worst',
-    'between', 'range', 'from', 'first', 'last',
-    'each', 'every', 'per', 'by', 'sold', 'sales'
+    'between', 'range',
+]
+
+# Additional patterns that indicate data analysis when combined with other keywords
+DATA_ANALYSIS_PATTERNS = [
+    r'\b(average|mean|sum|total|count)\s+(of|for|in)',
+    r'\b(which|what|who)\s+\w+\s+(has|have|sold|generated)\s+(most|highest|lowest|least)',
+    r'\b(first|last|top|bottom)\s+\d+',
+    r'\beach\s+\w+',
+    r'\bevery\s+\w+',
+    r'\bper\s+\w+',
+    r'\bby\s+(region|category|product|salesperson|person)',
 ]
 
 # Data analysis prompt templates
@@ -184,21 +194,37 @@ Column Information:
     
     return info
 
-def classify_query_type(query: str) -> str:
+def classify_query_type(query: str, has_tabular_data: bool = False) -> str:
     """
     Classify whether query needs data analysis or document retrieval
     
     Args:
         query: User query
+        has_tabular_data: Whether tabular data is currently available
         
     Returns:
         'data_analysis' or 'document_retrieval'
     """
+    import re
     query_lower = query.lower()
+    
+    # CRITICAL: If no tabular data, ALWAYS use document retrieval
+    if not has_tabular_data:
+        return 'document_retrieval'
+    
+    # Exclude document-focused queries even if they have calculation words
+    exclusion_words = ['summarize', 'summary', 'title', 'name', 'author', 'describe', 'explain', 'definition', 'about', 'topic', 'project', 'presentation']
+    if any(word in query_lower for word in exclusion_words):
+        return 'document_retrieval'
     
     # Check for calculation keywords
     for keyword in CALCULATION_KEYWORDS:
         if keyword in query_lower:
+            return 'data_analysis'
+    
+    # Check for data analysis patterns
+    for pattern in DATA_ANALYSIS_PATTERNS:
+        if re.search(pattern, query_lower):
             return 'data_analysis'
     
     return 'document_retrieval'
@@ -758,35 +784,29 @@ ANSWER:"""
 def expand_query(query: str) -> list[str]:
     """
     Generate query variations to improve retrieval coverage
+    SIMPLIFIED for faster processing
     
     Args:
         query: Original user query
         
     Returns:
-        List of query variations including original (max 3)
+        List of query variations including original (max 2 for speed)
     """
     variations = [query]
     query_lower = query.lower()
     
-    # Variation 1: Remove question words for better semantic matching
+    # Single variation: Remove question words for better semantic matching
     if query_lower.startswith("who "):
         variations.append(query[4:])  # Remove "who "
     elif query_lower.startswith("what is "):
         variations.append(query[8:])  # Remove "what is "
     elif query_lower.startswith("what are "):
         variations.append(query[9:])  # Remove "what are "
+    elif query_lower.startswith("what "):
+        variations.append(query[5:])  # Remove "what "
     
-    # Variation 2: Extract key terms (last few content words)
-    words = query.split()
-    if len(words) > 3:
-        # Take last 2-3 words as key terms
-        key_terms = " ".join(words[-3:])
-        if key_terms not in variations:
-            variations.append(key_terms)
-    
-    # Variation 3: Add noun phrases for names/entities
-    # Simple heuristic: capitalize words likely to be names
-    important_words = [w for w in words if w[0].isupper() and len(w) > 2]
+    # Return max 2 variations for speed
+    return variations[:2]
     if len(important_words) >= 2:
         entity_query = " ".join(important_words)
         if entity_query not in variations:
@@ -896,7 +916,7 @@ MAX_RETRIES = 3  # Maximum retries for failed operations
 RETRY_DELAY_SECONDS = 1  # Delay between retries
 
 # Timeouts
-LLM_TIMEOUT_SECONDS = 60  # Maximum wait time for LLM response
+LLM_TIMEOUT_SECONDS = 120  # 2 minutes for LLM response (document queries only, data analysis bypasses LLM)
 EMBEDDING_TIMEOUT_SECONDS = 30  # Maximum wait time for embedding
 
 # ============================================================================
