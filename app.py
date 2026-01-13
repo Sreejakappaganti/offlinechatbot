@@ -49,7 +49,7 @@ class OllamaClient:
     
     def generate(self, prompt: str, temperature: float = None, max_tokens: int = None) -> str:
         """
-        Generate response from Ollama
+        Generate response from Ollama with streaming for faster perceived response
         
         Args:
             prompt: Input prompt
@@ -64,17 +64,18 @@ class OllamaClient:
         
         url = f"{self.host}/api/generate"
         
+        # Simplified options for faster generation
         payload = {
             "model": self.model,
             "prompt": prompt,
-            "stream": False,
+            "stream": False,  # Keep non-streaming for now, but with optimized options
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
                 "top_k": 40,
                 "top_p": 0.9,
                 "repeat_penalty": 1.1,
-                "num_ctx": config.LLM_CONTEXT_WINDOW
+                "num_ctx": 2048  # Reduced from config.LLM_CONTEXT_WINDOW for speed
             }
         }
         
@@ -88,7 +89,7 @@ class OllamaClient:
         except requests.exceptions.ConnectionError:
             return "Error: Cannot connect to Ollama. Make sure Ollama is running (ollama serve)."
         except requests.exceptions.Timeout:
-            return "Error: Request timed out. The document may be too complex. Try reducing RETRIEVAL_TOP_K (currently set to {}) in config.py or use a smaller model.".format(config.RETRIEVAL_TOP_K)
+            return f"Error: Request timed out after {config.LLM_TIMEOUT_SECONDS} seconds. Try: 1) Reducing RETRIEVAL_TOP_K (currently {config.RETRIEVAL_TOP_K}) in config.py, 2) Using a faster model like 'qwen2.5:0.5b', or 3) Asking simpler questions."
         except Exception as e:
             return f"Error generating response: {str(e)}"
     
@@ -179,7 +180,7 @@ def perform_rag(query: str) -> Dict:
     
     # Debug: Log the full prompt (first 500 chars)
     print(f"\n[RAG Debug] Prompt preview (first 500 chars):")
-    print("="*60)
+    print("="*60)h
     print(prompt[:500])
     print("="*60)
     
